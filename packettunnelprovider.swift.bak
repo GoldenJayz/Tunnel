@@ -1,0 +1,45 @@
+
+import NetworkExtension
+import WireGuardKitGo
+
+class PacketTunnelProvider: NEPacketTunnelProvider {
+    private var adapter: WireGuardAdapter?
+
+    override func startTunnel(options: [String : NSObject]?,
+                              completionHandler: @escaping (Error?) -> Void) {
+        NSLog("PacketTunnelProvider: Starting tunnel")
+        NSLog("fuyckfuyfufufuf")
+
+        guard let proto = protocolConfiguration as? NETunnelProviderProtocol,
+              let wgQuickConfig = proto.providerConfiguration?["wgQuickConfig"] as? String else {
+            completionHandler(NSError(domain: "FixMyMusic", code: -1,
+                                      userInfo: [NSLocalizedDescriptionKey: "Missing WireGuard config"]))
+            return
+        }
+
+        do {
+            let tunnelConfig = try TunnelConfiguration(fromWgQuickConfig: wgQuickConfig,
+                                                       called: "FixMyMusicTunnel")
+
+            adapter = WireGuardAdapter(with: tunnelConfig, shouldHandleErrors: true)
+            adapter?.start(with: self) { error in
+                if let error = error {
+                    NSLog("WireGuard start error: \(error)")
+                } else {
+                    NSLog("WireGuard tunnel started successfully")
+                }
+                completionHandler(error)
+            }
+        } catch {
+            NSLog("Failed to parse WireGuard config: \(error)")
+            completionHandler(error)
+        }
+    }
+
+    override func stopTunnel(with reason: NEProviderStopReason,
+                             completionHandler: @escaping () -> Void) {
+        NSLog("PacketTunnelProvider: Stopping tunnel")
+        adapter?.stop()
+        completionHandler()
+    }
+}

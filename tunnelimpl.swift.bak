@@ -1,0 +1,97 @@
+//
+//  tunnelimpl.swift.bak
+//  Pods
+//
+//  Created by Jaden Daniels on 9/15/25.
+//
+
+//
+//  TunnelImpl.swift
+//  Pods
+//
+//  Created by Jaden Daniels on 7/11/25.
+//
+
+import Foundation
+import NetworkExtension
+import React
+
+@objc public class TunnelImpl: NSObject {
+  @objc public func multiply(a: Int, b: Int) -> Int {
+    return (a * b) + 17
+  }
+
+  @objc public func removeTunnel() {
+    print("remove tunnel")
+  }
+
+  @objc
+  public func connectToTunnel(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) -> Void {
+    print("we in this rn")
+
+    NETunnelProviderManager.loadAllFromPreferences { tunnelManagersInSettings, error in
+      if let error = error {
+        NSLog("Error (loadAllFromPreferences): \(error)")
+        reject("LOAD_ERROR", "Failed to load preferences", error)
+        return
+      }
+
+      let preExistingTunnelManager = tunnelManagersInSettings?.first
+      let tunnelManager = preExistingTunnelManager ?? NETunnelProviderManager()
+
+      let protocolConfiguration = NETunnelProviderProtocol()
+      protocolConfiguration.providerBundleIdentifier = "org.reactjs.native.example.FixYourMusic.network-extension"
+      protocolConfiguration.serverAddress = "167.99.124.49:51820"
+
+      tunnelManager.protocolConfiguration = protocolConfiguration
+      tunnelManager.isEnabled = true
+       
+      
+      let wgQuickConfig = """
+        [Interface]
+        PrivateKey = AGf4e+GnRh1ODnDoJotXQUVJjN4vb3PjVtl9oHXuQkg=
+        Address = 10.10.11.11/24
+        DNS = 8.8.8.8, 1.1.1.1
+
+        [Peer]
+        PublicKey = fq8r9sLIjOo3h0qrCXRo4dbf6ZPXyz0ImR2KrKqe0V0=
+        AllowedIPs = 0.0.0.0/0
+        Endpoint = 167.99.124.49:51820
+        """
+
+      protocolConfiguration.providerConfiguration = [
+        "wgQuickConfig": wgQuickConfig
+      ]
+
+      tunnelManager.protocolConfiguration = protocolConfiguration
+      tunnelManager.isEnabled = true
+
+      tunnelManager.saveToPreferences { error in
+        if let error = error {
+          NSLog("Error (saveToPreferences): \(error)")
+          reject("SAVE_ERROR", "Failed to save preferences", error)
+          return
+        }
+
+        tunnelManager.loadFromPreferences { error in
+          if let error = error {
+            NSLog("Error (loadFromPreferences): \(error)")
+            reject("LOAD_BACK_ERROR", "Failed to load back preferences", error)
+            return
+          }
+
+          do {
+            try tunnelManager.connection.startVPNTunnel()
+            
+          } catch {
+            NSLog("Error (startTunnel): \(error)")
+            reject("START_TUNNEL_ERROR", "Failed to start tunnel", error)
+          }
+        }
+      }
+    }
+  }
+}
