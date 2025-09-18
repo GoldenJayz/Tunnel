@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.frameworks = 'NetworkExtension'
 
   s.platforms    = { :ios => min_ios_version_supported }
-  s.source       = { :git => "https://github.com/GoldenJayz/tunnel.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/GoldenJayz/Tunnel.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,cpp,swift}"
   s.private_header_files = "ios/**/*.h"
