@@ -1,5 +1,5 @@
 #import "Tunnel.h"
-#import "tunnel-Swift.h"
+#import <Tunnel/Tunnel-Swift.h>
 
 @implementation Tunnel {
   TunnelImpl *moduleImpl;
@@ -20,10 +20,10 @@ RCT_EXPORT_MODULE()
   return @([moduleImpl multiplyWithA:a b:b]);
 }
 
-- (void)connectToTunnel:(RCTPromiseResolveBlock)resolve
+- (void)connectToTunnel:(NSString *)wgConfig resolve:(RCTPromiseResolveBlock)resolve
                             reject:(RCTPromiseRejectBlock)reject
 {
-  return [moduleImpl connectToTunnel:resolve reject:reject];
+  return [moduleImpl connectToTunnelWithWgConfig:wgConfig resolve:resolve reject:reject];
 }
 
 - (void)removeTunnel {
